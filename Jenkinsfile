@@ -11,7 +11,7 @@ pipeline {
             steps {
                 echo 'Checking out code from Git...'
                 git branch: 'main', url: 'https://github.com/J95686/flaskjenkins.git'
-            }
+            } v
         }
 
         stage('Install dependencies') {
