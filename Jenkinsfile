@@ -14,7 +14,7 @@ pipeline {
 
                     // Activate virtual environment and install dependencies
                     sh """
-                    source ${VENV_DIR}/bin/activate
+                    . ${VENV_DIR}/bin/activate
                     pip install -r requirements.txt
                     """
                 }
@@ -26,7 +26,7 @@ pipeline {
                 script {
                     // Run tests using unittest
                     sh """
-                    source ${VENV_DIR}/bin/activate
+                    . ${VENV_DIR}/bin/activate
                     python test.py
                     """
                 }
@@ -37,7 +37,6 @@ pipeline {
             steps {
                 script {
                     // Here you can add deployment commands.
-                    // For example, you could copy files to a server or start the application.
                     echo 'Deploying the application...'
                 }
             }
