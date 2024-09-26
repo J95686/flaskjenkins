@@ -24,12 +24,12 @@ pipeline {
             }
         }
 
-       stage('Run tests') {
-    steps {
-        echo 'Running unit tests...'
-        sh 'venv/bin/python -m unittest tests/test.py'
-    }
-}
+        stage('Run tests') {
+            steps {
+                echo 'Running unit tests...'
+                sh 'venv/bin/python test.py' // Adjusted to point directly to test.py
+            }
+        }
 
         stage('Code Quality Analysis') {
             steps {
