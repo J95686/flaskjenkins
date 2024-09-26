@@ -23,7 +23,7 @@ class FlaskTestCase(unittest.TestCase):
     def test_delete_item(self):
         items.append('Item to delete')
         self.app.get('/delete/0')
-        self.assertIn('Item to delete', items)
+        self.assertNotIn('Item to delete', items)
 
 if __name__ == '__main__':
     unittest.main()
