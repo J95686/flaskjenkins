@@ -6,7 +6,7 @@ pipeline {
             steps {
                 script {
                     // Create virtual environment
-                    sh 'python3 -m venv venv'
+                    bat 'python -m venv venv'
                 }
             }
         }
@@ -14,8 +14,8 @@ pipeline {
             steps {
                 script {
                     // Activate the virtual environment and install dependencies
-                    sh '''
-                    . venv/Scripts/activate
+                    bat '''
+                    venv\\Scripts\\activate
                     pip install -r requirements.txt
                     '''
                 }
@@ -25,8 +25,8 @@ pipeline {
             steps {
                 script {
                     // Activate the virtual environment and run tests
-                    sh '''
-                    . venv/Scripts/activate
+                    bat '''
+                    venv\\Scripts\\activate
                     python -m unittest test.py
                     '''
                 }
@@ -36,9 +36,9 @@ pipeline {
             steps {
                 script {
                     // Activate the virtual environment and run the Flask app
-                    sh '''
-                    . venv/Scripts/activate
-                    FLASK_APP=app.py flask run &
+                    bat '''
+                    venv\\Scripts\\activate
+                    start flask run --host=0.0.0.0
                     '''
                 }
             }
