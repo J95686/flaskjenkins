@@ -15,7 +15,7 @@ pipeline {
                 script {
                     // Activate the virtual environment and install dependencies
                     sh '''
-                    . venv/bin/activate
+                    . venv/Scripts/activate
                     pip install -r requirements.txt
                     '''
                 }
@@ -26,7 +26,7 @@ pipeline {
                 script {
                     // Activate the virtual environment and run tests
                     sh '''
-                    . venv/bin/activate
+                    . venv/Scripts/activate
                     python -m unittest test.py
                     '''
                 }
@@ -37,7 +37,7 @@ pipeline {
                 script {
                     // Activate the virtual environment and run the Flask app
                     sh '''
-                    . venv/bin/activate
+                    . venv/Scripts/activate
                     FLASK_APP=app.py flask run &
                     '''
                 }
