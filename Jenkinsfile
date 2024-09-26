@@ -1,82 +1,63 @@
 pipeline {
-    agent any
+    agent any 
 
     environment {
-        DOCKER_IMAGE_NAME = 'flask-crud-app'
+        VENV_DIR = 'venv' // Directory for virtual environment
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo 'Checking out code from Git...'
-                git branch: 'main', url: 'https://github.com/J95686/flaskjenkins.git'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Building Docker image...'
                 script {
-                    def app = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}")
+                    // Create a virtual environment
+                    sh "python3 -m venv ${VENV_DIR}"
+
+                    // Activate virtual environment and install dependencies
+                    sh """
+                    source ${VENV_DIR}/bin/activate
+                    pip install -r requirements.txt
+                    """
                 }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Creating and activating virtual environment...'
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
-                    venv/bin/python -m unittest test.py
-                '''
-            }
-        }
-
-        stage('Code Quality Analysis') {
-            steps {
-                echo 'Running code quality checks...'
-                sh '''
-                    . venv/bin/activate
-                    pip install pylint
-                    pylint app.py
-                '''
+                script {
+                    // Run tests using unittest
+                    sh """
+                    source ${VENV_DIR}/bin/activate
+                    python test.py
+                    """
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying Docker image to staging environment...'
-                sh '''
-                    docker stop flask-crud-app-staging || true
-                    docker rm flask-crud-app-staging || true
-                    docker run -d -p 8081:5000 --name flask-crud-app-staging ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}
-                '''
+                script {
+                    // Here you can add deployment commands.
+                    // For example, you could copy files to a server or start the application.
+                    echo 'Deploying the application...'
+                }
             }
         }
-
+        
         stage('Release') {
             steps {
-                echo 'Deploying Docker image to production environment...'
-                sh '''
-                    docker stop flask-crud-app-prod || true
-                    docker rm flask-crud-app-prod || true
-                    docker run --rm -d -p 80:5000 --name flask-crud-app-prod ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}
-                '''
+                script {
+                    // Add release steps here (e.g., notifying users, versioning, etc.)
+                    echo 'Releasing the application...'
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline finished with status: ' + currentBuild.currentResult
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
+            echo 'Cleaning up...'
+            // Clean up virtual environment if necessary
+            sh "rm -rf ${VENV_DIR}"
         }
     }
 }
