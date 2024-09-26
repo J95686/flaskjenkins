@@ -3,67 +3,73 @@ pipeline {
 
     environment {
         DOCKER_IMAGE_NAME = 'flask-crud-app'
-        DOCKER_REGISTRY = 'your-docker-registry' // Optional: Specify your Docker registry
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                echo 'Building the application...'
+                echo 'Checking out code from Git...'
+                git branch: 'main', url: 'https://github.com/J95686/flaskjenkins.git'
+            } 
+        }
+
+        stage('Install dependencies') {
+            steps {
+                echo 'Creating and activating virtual environment...'
                 sh '''
-                    # Create and activate the virtual environment
+                    #!/bin/bash
                     python3 -m venv venv
-                    . venv/bin/activate
-
-                    # Install dependencies
+                    source venv/bin/activate
                     pip install -r requirements.txt
-
-                    # Build the Docker image
-                    docker build -t ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} .
                 '''
             }
         }
 
-        stage('Test') {
+        stage('Run tests') {
             steps {
-                echo 'Running tests...'
-                sh '''
-                    . venv/bin/activate
-                    venv/bin/python -m unittest discover -s tests
-                '''
+                echo 'Running unit tests...'
+                sh 'venv/bin/python -m unittest discover -s tests'
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality checks...'
-                sh '''
-                    . venv/bin/activate
-                    venv/bin/pylint app.py
-                '''
+                sh 'venv/bin/pylint app.py'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker image') {
+            steps {
+                script {
+                    echo 'Building Docker image...'
+                    def app = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}")
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
             steps {
                 echo 'Deploying Docker image to staging environment...'
-                sh '''
-                    docker stop flask-crud-app-staging || true
-                    docker rm flask-crud-app-staging || true
-                    docker run -d -p 8081:5000 --name flask-crud-app-staging ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}
-                '''
+                sh 'docker stop flask-crud-app-staging || true'
+                sh 'docker rm flask-crud-app-staging || true'
+                sh 'docker run -d -p 8081:5000 --name flask-crud-app-staging ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}'
             }
         }
 
-        stage('Release') {
+        stage('Deploy to Production') {
             steps {
-                echo 'Releasing the application...'
-                sh '''
-                    echo 'Deploying to production...'
-                    docker stop flask-crud-app-prod || true
-                    docker rm flask-crud-app-prod || true
-                    docker run --rm -d -p 80:5000 --name flask-crud-app-prod ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}
-                '''
+                echo 'Deploying Docker image to production environment...'
+                sh 'docker stop flask-crud-app-prod || true'
+                sh 'docker rm flask-crud-app-prod || true'
+                sh 'docker run --rm -d -p 80:5000 --name flask-crud-app-prod ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}'
+            }
+        }
+
+        stage('Monitoring') {
+            steps {
+                echo 'Monitoring production environment...'
+                // Add monitoring steps here
             }
         }
     }
