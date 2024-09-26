@@ -1,62 +1,53 @@
 pipeline {
     agent any 
 
-    environment {
-        VENV_DIR = 'venv' // Directory for virtual environment
-    }
-
     stages {
-        stage('Build') {
+        stage('Setup') {
             steps {
                 script {
-                    // Create a virtual environment
-                    sh "python3 -m venv ${VENV_DIR}"
-
-                    // Activate virtual environment and install dependencies
-                    sh """
-                    . ${VENV_DIR}/bin/activate
+                    // Create virtual environment
+                    sh 'python3 -m venv venv'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Activate the virtual environment and install dependencies
+                    sh '''
+                    . venv/bin/activate
                     pip install -r requirements.txt
-                    """
+                    '''
                 }
             }
         }
-
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 script {
-                    // Run tests using unittest
-                    sh """
-                    . ${VENV_DIR}/bin/activate
-                    python test.py
-                    """
+                    // Activate the virtual environment and run tests
+                    sh '''
+                    . venv/bin/activate
+                    python -m unittest test.py
+                    '''
                 }
             }
         }
-
-        stage('Deploy') {
+        stage('Start Flask App') {
             steps {
                 script {
-                    // Here you can add deployment commands.
-                    echo 'Deploying the application...'
-                }
-            }
-        }
-        
-        stage('Release') {
-            steps {
-                script {
-                    // Add release steps here (e.g., notifying users, versioning, etc.)
-                    echo 'Releasing the application...'
+                    // Activate the virtual environment and run the Flask app
+                    sh '''
+                    . venv/bin/activate
+                    FLASK_APP=app.py flask run &
+                    '''
                 }
             }
         }
     }
-
     post {
         always {
-            echo 'Cleaning up...'
-            // Clean up virtual environment if necessary
-            sh "rm -rf ${VENV_DIR}"
+            // Clean up the workspace
+            cleanWs()
         }
     }
 }
