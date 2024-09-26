@@ -16,10 +16,11 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 echo 'Creating and activating virtual environment...'
-        sh '''
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r workspace/flaskjenkins/requirements.txt
+                sh '''
+                    python3 -m venv venv
+                    venv/bin/pip install -r workspace/flaskjenkins/requirements.txt
+                '''
+            }
         }
 
         stage('Run tests') {
@@ -32,7 +33,7 @@ pipeline {
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality checks...'
-                sh 'pylint app.py'
+                sh 'venv/bin/pylint app.py' // Ensure pylint is available in the venv
             }
         }
 
@@ -50,7 +51,7 @@ pipeline {
                 echo 'Deploying Docker image to staging environment...'
                 sh 'docker stop flask-crud-app-staging || true'
                 sh 'docker rm flask-crud-app-staging || true'
-                sh 'docker run -d -p 8081:5000 --name flask-crud-app-staging ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}'
+                sh "docker run -d -p 8081:5000 --name flask-crud-app-staging ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
             }
         }
 
@@ -59,7 +60,7 @@ pipeline {
                 echo 'Deploying Docker image to production environment...'
                 sh 'docker stop flask-crud-app-prod || true'
                 sh 'docker rm flask-crud-app-prod || true'
-                sh 'docker run --rm -d -p 80:5000 --name flask-crud-app-prod ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}'
+                sh "docker run --rm -d -p 80:5000 --name flask-crud-app-prod ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
             }
         }
 
